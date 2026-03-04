@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>World Time Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b0f1a; --card: #1a2235; --border: #2a3a55;
+      --accent: #3b82f6; --accent2: #8b5cf6; --gold: #f59e0b;
+      --text: #e2e8f0; --muted: #64748b; --success: #10b981;
+      --input-bg: rgba(255,255,255,.04); --hover-bg: rgba(59,130,246,.04);
+      --grid-color: rgba(59,130,246,.04); --share-bg: rgba(0,0,0,.25);
+      --meridian-bg1: #1a2235; --meridian-bg2: #0f172a;
+      --shadow: 0 4px 32px rgba(0,0,0,.35);
+      --badge-bg: rgba(59,130,246,.12); --badge-border: rgba(59,130,246,.3);
+    }
+    html.light {
+      --bg: #f0f4ff; --card: #ffffff; --border: #d1daf0;
+      --accent: #2563eb; --accent2: #7c3aed; --gold: #d97706;
+      --text: #1e293b; --muted: #64748b; --success: #059669;
+      --input-bg: rgba(0,0,0,.04); --hover-bg: rgba(37,99,235,.04);
+      --grid-color: rgba(37,99,235,.06); --share-bg: rgba(0,0,0,.03);
+      --meridian-bg1: #fffbeb; --meridian-bg2: #fef3c7;
+      --shadow: 0 4px 32px rgba(0,0,0,.08);
+      --badge-bg: rgba(37,99,235,.08); --badge-border: rgba(37,99,235,.25);
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; padding: 2rem 1rem; transition: background .5s, color .5s; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+    .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
+
+    /* ── Header ── */
+    header { text-align: center; margin-bottom: 3rem; }
+    .badge-row { display: flex; align-items: center; justify-content: center; gap: .6rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: .5rem; background: var(--badge-bg); border: 1px solid var(--badge-border); color: var(--accent); font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .9rem; border-radius: 999px; }
+    .badge .dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: pulse 1.6s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.4)} }
+
+    .ctrl-badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .75rem; font-weight: 600; letter-spacing: .06em;
+      padding: .3rem .35rem .3rem .75rem; border-radius: 999px; cursor: default;
+      border: 1px solid var(--border); color: var(--muted); background: var(--card);
+      transition: border-color .3s, background .3s;
+    }
+
+    /* ── Toggle switch ── */
+    .toggle-wrap { display: inline-flex; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 3px; gap: 2px; transition: background .3s; }
+    .toggle-btn {
+      font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      padding: .22rem .65rem; border-radius: 999px; border: none; cursor: pointer;
+      background: transparent; color: var(--muted); transition: all .2s;
+    }
+    .toggle-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; box-shadow: 0 2px 8px rgba(59,130,246,.3); }
+
+    .theme-badge { display: inline-flex; align-items: center; gap: .4rem; font-size: .75rem; font-weight: 600; letter-spacing: .06em; padding: .35rem .9rem; border-radius: 999px; cursor: pointer; transition: all .3s; user-select: none; border: 1px solid var(--border); color: var(--muted); background: var(--card); }
+    .theme-badge:hover { border-color: var(--accent); color: var(--accent); }
+
+    h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: -.02em; line-height: 1.1; background: linear-gradient(135deg, var(--text) 0%, var(--muted) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    h1 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    header p { color: var(--muted); margin-top: .75rem; font-size: 1rem; }
+
+    /* ── Meridian card ── */
+    .meridian-card { background: linear-gradient(135deg, var(--meridian-bg1), var(--meridian-bg2)); border: 1px solid var(--gold); border-radius: 1.25rem; padding: 2rem 2.5rem; margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; box-shadow: 0 0 40px rgba(245,158,11,.08), var(--shadow); transition: background .5s; }
+    .meridian-left { display: flex; align-items: center; gap: 1.25rem; }
+    .meridian-icon { width: 56px; height: 56px; border-radius: .875rem; background: linear-gradient(135deg, rgba(245,158,11,.2), rgba(245,158,11,.05)); border: 1px solid rgba(245,158,11,.4); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
+    .meridian-label { font-size: .8rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: .25rem; }
+    .meridian-name { font-size: 1.1rem; font-weight: 600; color: var(--text); }
+    .meridian-tz { font-size: .85rem; color: var(--muted); }
+    .meridian-clock { font-family: 'JetBrains Mono', monospace; font-size: clamp(2.2rem, 6vw, 3.5rem); font-weight: 600; color: var(--gold); letter-spacing: .04em; text-shadow: 0 0 30px rgba(245,158,11,.2); }
+    .meridian-date { text-align: right; font-size: .85rem; color: var(--muted); margin-top: .2rem; }
+
+    /* ── Section label ── */
+    .section-label { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+    .section-label h2 { font-size: 1rem; font-weight: 600; color: var(--text); white-space: nowrap; }
+    .section-label .line { flex: 1; height: 1px; background: var(--border); }
+    .section-label .pill { font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.25); color: var(--accent2); padding: .2rem .6rem; border-radius: 999px; white-space: nowrap; }
+
+    /* ── Table ── */
+    .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; overflow: hidden; box-shadow: var(--shadow); margin-bottom: 2rem; transition: background .5s; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: linear-gradient(90deg, rgba(59,130,246,.07), rgba(139,92,246,.07)); }
+    html.light thead tr { background: linear-gradient(90deg, rgba(37,99,235,.06), rgba(124,58,237,.06)); }
+    th { padding: 1rem 1.5rem; text-align: left; font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+    th:last-child, td:last-child { text-align: right; }
+    th.input-col { text-align: center; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .2s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--hover-bg); }
+    td { padding: .9rem 1.5rem; vertical-align: middle; }
+
+    .region-cell { display: flex; align-items: center; gap: .85rem; }
+    .flag { font-size: 1.4rem; line-height: 1; }
+    .region-name { font-weight: 500; font-size: .95rem; color: var(--text); }
+    .region-sub { font-size: .78rem; color: var(--muted); margin-top: .1rem; }
+    .tz-badge { display: inline-flex; align-items: center; background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.2); color: var(--accent); font-size: .75rem; font-weight: 500; padding: .25rem .65rem; border-radius: .4rem; }
+    html.light .tz-badge { background: rgba(37,99,235,.08); border-color: rgba(37,99,235,.2); }
+
+    .time-cell { font-family: 'JetBrains Mono', monospace; font-size: 1.05rem; font-weight: 600; color: var(--text); }
+    .ampm-suffix { font-size: .72rem; font-weight: 700; color: var(--accent2); margin-left: .3rem; letter-spacing: .04em; }
+    .date-cell { font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+
+    .offset-pill { display: inline-block; font-size: .78rem; font-weight: 600; padding: .25rem .65rem; border-radius: .4rem; }
+    .offset-ahead  { background: rgba(16,185,129,.1);  color: #059669; border: 1px solid rgba(16,185,129,.3); }
+    .offset-behind { background: rgba(239,68,68,.1);   color: #dc2626; border: 1px solid rgba(239,68,68,.3); }
+    .offset-same   { background: rgba(245,158,11,.1);  color: var(--gold); border: 1px solid rgba(245,158,11,.3); }
+    html:not(.light) .offset-ahead  { color: #6ee7b7; }
+    html:not(.light) .offset-behind { color: #fca5a5; }
+
+    /* ── Input ── */
+    .time-input-wrap { display: flex; align-items: center; justify-content: center; gap: .4rem; }
+    .time-input { font-family: 'JetBrains Mono', monospace; font-size: .9rem; font-weight: 600; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: .55rem; padding: .45rem .6rem; width: 88px; text-align: center; outline: none; transition: border-color .2s, box-shadow .2s; }
+    .time-input::placeholder { color: var(--muted); font-weight: 400; font-size: .8rem; }
+    .time-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+    .time-input.active { border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(139,92,246,.12); color: var(--accent2); }
+    .ampm-toggle { display: inline-flex; background: var(--input-bg); border: 1px solid var(--border); border-radius: .55rem; overflow: hidden; }
+    .ampm-btn { font-size: .72rem; font-weight: 700; padding: .45rem .45rem; border: none; background: transparent; color: var(--muted); cursor: pointer; transition: all .15s; line-height: 1; }
+    .ampm-btn.active { background: var(--accent2); color: #fff; }
+
+    /* ── Converted time ── */
+    .converted-time { font-family: 'JetBrains Mono', monospace; font-size: 1.05rem; font-weight: 600; color: var(--accent2); }
+    .converted-date { font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+
+    /* ── Share box ── */
+    .share-box { background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.5rem 2rem; margin-bottom: 2rem; box-shadow: var(--shadow); display: none; transition: background .5s; }
+    .share-box.visible { display: block; }
+    .share-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: .75rem; }
+    .share-header span { font-size: .85rem; font-weight: 600; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
+    .share-actions { display: flex; gap: .6rem; }
+    .btn-copy, .btn-reset { display: inline-flex; align-items: center; gap: .4rem; font-size: .82rem; font-weight: 600; border: none; border-radius: .65rem; padding: .5rem 1rem; cursor: pointer; transition: all .2s; letter-spacing: .02em; }
+    .btn-copy { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+    .btn-copy:hover { opacity: .85; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(59,130,246,.3); }
+    .btn-copy.copied { background: linear-gradient(135deg, var(--success), #059669); }
+    .btn-reset { background: var(--input-bg); color: var(--muted); border: 1px solid var(--border); }
+    .btn-reset:hover { color: var(--text); border-color: var(--muted); }
+    .share-text { font-family: 'JetBrains Mono', monospace; font-size: .85rem; line-height: 1.9; color: var(--text); background: var(--share-bg); border: 1px solid var(--border); border-radius: .75rem; padding: 1.1rem 1.3rem; white-space: pre-wrap; word-break: break-word; user-select: all; }
+
+    footer { text-align: center; margin-top: 1.5rem; font-size: .8rem; color: var(--muted); }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media(max-width: 700px) {
+      th:nth-child(2), td:nth-child(2) { display: none; }
+      .meridian-card { justify-content: center; text-align: center; }
+      .meridian-date { text-align: center; }
+      td, th { padding: .75rem .75rem; }
+    }
+    @media(max-width: 500px) {
+      th:nth-child(5), td:nth-child(5) { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="badge-row">
+      <div class="badge"><span class="dot"></span>Live · Updates Every Second</div>
+
+      <!-- Time format toggle -->
+      <div class="ctrl-badge">
+        <span style="margin-right:.2rem; font-size:.78rem;">🕐</span>
+        <div class="toggle-wrap">
+          <button class="toggle-btn active" id="btn-ampm" onclick="setFormat('ampm')">AM/PM</button>
+          <button class="toggle-btn"        id="btn-24h"  onclick="setFormat('24h')">24H</button>
+        </div>
+      </div>
+
+      <!-- Theme toggle -->
+      <div class="theme-badge" id="theme-badge" onclick="toggleTheme()">
+        <span id="theme-icon">🌙</span>
+        <span id="theme-label">Auto: Night</span>
+      </div>
+    </div>
+    <h1>World <span>Time Zones</span></h1>
+    <p>All times converted from the Meridian (GMT+0) reference zone</p>
+  </header>
+
+  <!-- Meridian Hero -->
+  <div class="meridian-card">
+    <div class="meridian-left">
+      <div class="meridian-icon">🌍</div>
+      <div>
+        <div class="meridian-label">⭐ Reference Zone</div>
+        <div class="meridian-name">Meridian Time (GMT / UTC+0)</div>
+        <div class="meridian-tz">Greenwich Mean Time · Prime Meridian</div>
+      </div>
+    </div>
+    <div>
+      <div class="meridian-clock" id="meridian-time">--:--:--</div>
+      <div class="meridian-date" id="meridian-date">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Live Table -->
+  <div class="section-label">
+    <h2>Live Clocks</h2><div class="line"></div>
+    <span class="pill">Auto-updating</span>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Region</th><th>Timezone</th><th>Local Time</th>
+          <th class="input-col">Enter a Time</th><th>GMT Offset</th>
+        </tr>
+      </thead>
+      <tbody id="tz-table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Converter -->
+  <div class="section-label">
+    <h2>Converter</h2><div class="line"></div>
+    <span class="pill" id="converter-hint">Type a time above ↑</span>
+  </div>
+  <div class="table-card" id="converter-table-card" style="display:none;">
+    <table>
+      <thead>
+        <tr><th>Region</th><th>Timezone</th><th>Converted Time</th><th>GMT Offset</th></tr>
+      </thead>
+      <tbody id="converted-table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Share Box -->
+  <div class="share-box" id="share-box">
+    <div class="share-header">
+      <span>📋 Shareable Text</span>
+      <div class="share-actions">
+        <button class="btn-copy" id="btn-copy" onclick="copyShare()">⎘ Copy</button>
+        <button class="btn-reset" onclick="resetConverter()">✕ Clear</button>
+      </div>
+    </div>
+    <div class="share-text" id="share-text"></div>
+  </div>
+
+  <footer>
+    <p>Clocks update every second · All offsets relative to UTC/GMT+0 ·
+      <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank">IANA Timezone Reference</a>
+    </p>
+  </footer>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────
+const MERIDIAN = { flag: '🌍', name: 'Meridian (GMT)', sub: 'Greenwich Mean Time', iana: 'Etc/GMT', label: 'GMT+0' };
+const zones = [
+  { flag: '🇺🇸', name: 'California',           sub: 'United States — West Coast', iana: 'America/Los_Angeles', label: 'PT (PST/PDT)' },
+  { flag: '🇧🇷', name: 'Brazil',                sub: 'Brasília — South America',   iana: 'America/Sao_Paulo',  label: 'BRT/BRST'     },
+  { flag: '🇺🇸', name: 'Eastern Time',          sub: 'United States — East Coast', iana: 'America/New_York',   label: 'ET (EST/EDT)'  },
+  { flag: '🇨🇭', name: 'Switzerland & Germany', sub: 'Central Europe',             iana: 'Europe/Zurich',      label: 'CET/CEST'      },
+];
+const allZones = [MERIDIAN, ...zones];
+
+// ── State ─────────────────────────────────────────────────────────
+let use24h = false;           // AM/PM by default
+let themeOverride = null;
+let lastConverterInput = null; // { idx, val } — to refresh on format change
+
+// ── Format helpers ────────────────────────────────────────────────
+function pad(n) { return String(n).padStart(2, '0'); }
+
+// Returns { h, m, s, ampm } from a Date in a given IANA zone
+function getPartsInZone(date, iana) {
+  const opts = { timeZone: iana, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' };
+  const parts = new Intl.DateTimeFormat('en-US', opts).formatToParts(date);
+  const p = {};
+  parts.forEach(({ type, value }) => p[type] = value);
+  const h24 = parseInt(p.hour, 10);
+  const ampm = h24 >= 12 ? 'PM' : 'AM';
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return { h24, h12, m: p.minute, s: p.second, ampm, dateStr: `${p.weekday}, ${p.day} ${p.month} ${p.year}` };
+}
+
+// Build display string + optional AM/PM tag
+function formatTimeDisplay(parts, includeSec) {
+  if (use24h) {
+    return { main: `${pad(parts.h24)}:${parts.m}${includeSec ? ':' + parts.s : ''}`, suffix: '' };
+  } else {
+    return { main: `${pad(parts.h12)}:${parts.m}${includeSec ? ':' + parts.s : ''}`, suffix: parts.ampm };
+  }
+}
+
+// For the Meridian hero clock
+function getMeridianDisplay() {
+  const parts = getPartsInZone(new Date(), 'Etc/GMT');
+  const { main, suffix } = formatTimeDisplay(parts, true);
+  return { timeStr: main, suffix, dateStr: parts.dateStr };
+}
+
+// For live table rows
+function getLiveDisplay(iana) {
+  const parts = getPartsInZone(new Date(), iana);
+  const { main, suffix } = formatTimeDisplay(parts, true);
+  return { timeStr: main, suffix, dateStr: parts.dateStr };
+}
+
+// ── Format toggle ─────────────────────────────────────────────────
+function setFormat(fmt) {
+  use24h = (fmt === '24h');
+  document.getElementById('btn-ampm').classList.toggle('active', !use24h);
+  document.getElementById('btn-24h').classList.toggle('active', use24h);
+
+  // Update placeholder in inputs
+  document.querySelectorAll('.time-input').forEach(el => {
+    el.placeholder = use24h ? '14:30' : '2:30';
+  });
+
+  // Re-run converter if one is active
+  if (lastConverterInput) {
+    triggerConvert(lastConverterInput.idx, lastConverterInput.val);
+  }
+  // Immediately refresh clocks display
+  updateClocks();
+}
+
+// ── Theme ─────────────────────────────────────────────────────────
+function getAutoTheme() { const h = new Date().getHours(); return (h >= 19 || h < 7) ? 'dark' : 'light'; }
+function applyTheme(theme) {
+  document.documentElement.classList.toggle('light', theme === 'light');
+  const isLight = theme === 'light', isAuto = themeOverride === null;
+  document.getElementById('theme-icon').textContent  = isLight ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = (isAuto ? 'Auto: ' : '') + (isLight ? 'Day' : 'Night');
+}
+function toggleTheme() {
+  const cur = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+  themeOverride = cur === 'light' ? 'dark' : 'light';
+  applyTheme(themeOverride);
+}
+function checkAutoTheme() { if (themeOverride === null) applyTheme(getAutoTheme()); }
+checkAutoTheme();
+setInterval(checkAutoTheme, 60000);
+
+// ── Offset helper ─────────────────────────────────────────────────
+function getOffsetMinutes(iana, refDate) {
+  const d = refDate || new Date();
+  const local = new Date(d.toLocaleString('en-US', { timeZone: iana }));
+  const utc   = new Date(d.toLocaleString('en-US', { timeZone: 'UTC' }));
+  return Math.round((local - utc) / 60000);
+}
+function formatOffsetLabel(iana) {
+  const diff = getOffsetMinutes(iana);
+  const sign = diff >= 0 ? '+' : '-', abs = Math.abs(diff);
+  const h = Math.floor(abs / 60), m = abs % 60;
+  const label = m ? `GMT${sign}${h}:${pad(m)}` : `GMT${sign}${h}`;
+  const cls = diff > 0 ? 'offset-ahead' : diff < 0 ? 'offset-behind' : 'offset-same';
+  return { label, cls };
+}
+
+// ── Build rows ────────────────────────────────────────────────────
+function buildRows() {
+  const tbody = document.getElementById('tz-table-body');
+  tbody.innerHTML = '';
+  zones.forEach((z, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="region-cell"><span class="flag">${z.flag}</span><div><div class="region-name">${z.name}</div><div class="region-sub">${z.sub}</div></div></div></td>
+      <td><span class="tz-badge">${z.label}</span></td>
+      <td><div class="time-cell"><span id="time-${i}">--:--:--</span><span class="ampm-suffix" id="suffix-${i}"></span></div><div class="date-cell" id="date-${i}">…</div></td>
+      <td style="text-align:center">
+        <div class="time-input-wrap">
+          <input class="time-input" id="input-${i}" type="text" placeholder="${use24h ? '14:30' : '2:30'}" maxlength="7"
+            oninput="handleInput(${i}, this)" autocomplete="off" />
+          <div class="ampm-toggle" id="ampm-toggle-${i}">
+            <button class="ampm-btn active" id="am-btn-${i}" onclick="setAmPm(${i},'AM')">AM</button>
+            <button class="ampm-btn"        id="pm-btn-${i}" onclick="setAmPm(${i},'PM')">PM</button>
+          </div>
+        </div>
+      </td>
+      <td><span class="offset-pill" id="offset-${i}">…</span></td>`;
+    tbody.appendChild(tr);
+  });
+  // Show/hide AM/PM toggles based on current format
+  updateAmPmToggles();
+  buildConvertedRows();
+}
+
+function updateAmPmToggles() {
+  zones.forEach((_, i) => {
+    const tog = document.getElementById(`ampm-toggle-${i}`);
+    if (tog) tog.style.display = use24h ? 'none' : 'inline-flex';
+  });
+}
+
+// Per-row AM/PM state
+const rowAmPm = {}; // { [i]: 'AM' | 'PM' }
+function setAmPm(i, val) {
+  rowAmPm[i] = val;
+  document.getElementById(`am-btn-${i}`).classList.toggle('active', val === 'AM');
+  document.getElementById(`pm-btn-${i}`).classList.toggle('active', val === 'PM');
+  const inp = document.getElementById(`input-${i}`);
+  if (inp.value) handleInput(i, inp);
+}
+
+function buildConvertedRows() {
+  const tbody = document.getElementById('converted-table-body');
+  tbody.innerHTML = '';
+  allZones.forEach((z, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="region-cell"><span class="flag">${z.flag}</span><div><div class="region-name">${z.name}</div><div class="region-sub">${z.sub}</div></div></div></td>
+      <td><span class="tz-badge">${z.label}</span></td>
+      <td><div class="converted-time"><span id="conv-time-${i}">--:--</span><span class="ampm-suffix" id="conv-suffix-${i}"></span></div><div class="converted-date" id="conv-date-${i}"></div></td>
+      <td><span class="offset-pill" id="conv-offset-${i}">…</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Live clocks ───────────────────────────────────────────────────
+function updateClocks() {
+  // Meridian hero
+  const { timeStr, suffix, dateStr } = getMeridianDisplay();
+  const mc = document.getElementById('meridian-time');
+  mc.innerHTML = suffix
+    ? `${timeStr}<span style="font-size:.45em;font-weight:700;color:var(--gold);margin-left:.35rem;vertical-align:middle;">${suffix}</span>`
+    : timeStr;
+  document.getElementById('meridian-date').textContent = dateStr;
+
+  // Zone rows
+  zones.forEach((z, i) => {
+    const { timeStr, suffix, dateStr } = getLiveDisplay(z.iana);
+    const { label, cls } = formatOffsetLabel(z.iana);
+    document.getElementById(`time-${i}`).textContent = timeStr;
+    document.getElementById(`suffix-${i}`).textContent = suffix;
+    document.getElementById(`date-${i}`).textContent = dateStr;
+    const pill = document.getElementById(`offset-${i}`);
+    pill.textContent = label; pill.className = `offset-pill ${cls}`;
+  });
+}
+
+// ── Converter ─────────────────────────────────────────────────────
+function handleInput(i, el) {
+  let v = el.value.replace(/[^0-9:]/g, '');
+  if (v.length === 2 && !v.includes(':')) v = v + ':';
+  if (v.length > 5) v = v.slice(0, 5);
+  if (el.value !== v) el.value = v;
+
+  document.querySelectorAll('.time-input').forEach((inp, j) => inp.classList.toggle('active', j === i));
+
+  if (/^\d{1,2}:\d{2}$/.test(v)) {
+    triggerConvert(i, v);
+  } else {
+    lastConverterInput = null;
+    hideConverted();
+  }
+}
+
+function triggerConvert(i, v) {
+  lastConverterInput = { idx: i, val: v };
+  const sourceIana = zones[i].iana;
+
+  let [hStr, mStr] = v.split(':');
+  let hh = parseInt(hStr, 10), mm = parseInt(mStr, 10);
+  if (mm > 59) { hideConverted(); return; }
+
+  if (!use24h) {
+    // Convert 12h → 24h
+    const ap = rowAmPm[i] || 'AM';
+    if (ap === 'AM' && hh === 12) hh = 0;
+    if (ap === 'PM' && hh !== 12) hh += 12;
+    if (hh > 23) { hideConverted(); return; }
+  } else {
+    if (hh > 23) { hideConverted(); return; }
+  }
+
+  // Build UTC moment
+  const now = new Date();
+  const dateInZone = new Intl.DateTimeFormat('en-CA', { timeZone: sourceIana, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  const offsetMin = getOffsetMinutes(sourceIana, now);
+  const utcMoment = new Date(new Date(`${dateInZone}T${pad(hh)}:${pad(mm)}:00Z`).getTime() - offsetMin * 60000);
+
+  const results = {};
+  allZones.forEach(z => {
+    const parts = getPartsInZone(utcMoment, z.iana);
+    const { main, suffix } = formatTimeDisplay(parts, false);
+    results[z.iana] = { timeStr: main, suffix, dateStr: parts.dateStr, h24: parts.h24, m: parts.m, ampm: parts.ampm };
+  });
+
+  showConverted(results, zones[i], hh, mm);
+}
+
+function showConverted(results, sourceZone, hh, mm) {
+  document.getElementById('converter-table-card').style.display = 'block';
+  document.getElementById('share-box').classList.add('visible');
+
+  const inputLabel = use24h
+    ? `${pad(hh)}:${pad(mm)}`
+    : `${pad(hh % 12 === 0 ? 12 : hh % 12)}:${pad(mm)} ${hh >= 12 ? 'PM' : 'AM'}`;
+  document.getElementById('converter-hint').textContent = `Showing conversions from ${sourceZone.name} at ${inputLabel}`;
+
+  allZones.forEach((z, i) => {
+    const r = results[z.iana];
+    const { label, cls } = formatOffsetLabel(z.iana);
+    document.getElementById(`conv-time-${i}`).textContent = r.timeStr;
+    document.getElementById(`conv-suffix-${i}`).textContent = r.suffix;
+    document.getElementById(`conv-date-${i}`).textContent = r.dateStr;
+    const pill = document.getElementById(`conv-offset-${i}`);
+    pill.textContent = label; pill.className = `offset-pill ${cls}`;
+  });
+
+  // Share string — always uses AM/PM labels for readability
+  const dates = allZones.map(z => results[z.iana].dateStr);
+  const allSameDate = dates.every(d => d === dates[0]);
+  const gmtR = results[MERIDIAN.iana];
+  const fmt = r => `${pad(r.h24 % 12 === 0 ? 12 : r.h24 % 12)}:${r.m} ${r.ampm}  /  ${pad(r.h24)}:${r.m}`;
+
+  let lines = [
+    `🕐 Time Zone Breakdown — from ${sourceZone.name} at ${inputLabel}`,
+    ``,
+    `🌍 ${'Meridian (GMT)'.padEnd(26)} ${fmt(gmtR)}  (GMT+0)${allSameDate ? '' : '  · ' + gmtR.dateStr}`,
+    `─────────────────────────────────────────────────────`,
+  ];
+  zones.forEach(z => {
+    const r = results[z.iana];
+    const { label } = formatOffsetLabel(z.iana);
+    lines.push(`${z.flag} ${z.name.padEnd(26)} ${fmt(r)}  (${label})${allSameDate ? '' : '  · ' + r.dateStr}`);
+  });
+  if (!allSameDate) { lines.push(``); lines.push(`📅 Note: Times span different calendar days.`); }
+  lines.push(``);
+  lines.push(`Generated with 🌐 World Time Dashboard`);
+  document.getElementById('share-text').textContent = lines.join('\n');
+}
+
+function hideConverted() {
+  document.getElementById('converter-table-card').style.display = 'none';
+  document.getElementById('share-box').classList.remove('visible');
+  document.getElementById('converter-hint').textContent = 'Type a time above ↑';
+}
+function resetConverter() {
+  document.querySelectorAll('.time-input').forEach(inp => { inp.value = ''; inp.classList.remove('active'); });
+  lastConverterInput = null;
+  hideConverted();
+}
+function copyShare() {
+  navigator.clipboard.writeText(document.getElementById('share-text').textContent).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+buildRows();
+updateClocks();
+setInterval(updateClocks, 1000);
+</script>
+</body>
+</html>
