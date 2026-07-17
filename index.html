@@ -336,6 +336,51 @@
     .sr-empty { padding: 1rem 1.1rem; font-size: .82rem; color: var(--muted); font-style: italic; font-family: 'Cormorant Garamond', serif; }
     .sr-added { font-size: .52rem; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--ahead); border: 1px solid var(--line); border-radius: 2px; padding: .12rem .4rem; margin-left: .6rem; }
 
+    /* ── Convert form ── */
+    .convert-card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 4px;
+      box-shadow: var(--shadow); margin-bottom: 2rem; padding: 1.7rem 2rem;
+      transition: background .7s;
+    }
+    .convert-form { display: flex; align-items: flex-end; gap: 1.6rem; flex-wrap: wrap; }
+    .field { display: flex; flex-direction: column; gap: .55rem; }
+    .field-label { font-size: .6rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+    .convert-form .time-input { width: 108px; font-size: 1rem; padding: .58rem .5rem; }
+    .convert-form .ampm-btn { padding: .58rem .55rem; }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: ''; position: absolute; right: 1rem; top: 50%;
+      width: 7px; height: 7px; border-right: 1px solid var(--muted); border-bottom: 1px solid var(--muted);
+      transform: translateY(-72%) rotate(45deg); pointer-events: none;
+    }
+    .tz-select {
+      font-family: 'Jost', sans-serif; font-weight: 400; font-size: .95rem;
+      background: var(--input-bg); color: var(--ink);
+      border: 1px solid var(--line); border-radius: 2px;
+      padding: .58rem 2.4rem .58rem .95rem; outline: none;
+      appearance: none; -webkit-appearance: none; cursor: pointer;
+      min-width: 240px; transition: border-color .25s; letter-spacing: .02em;
+    }
+    .tz-select:focus { border-color: var(--gold); }
+    .tz-select option { background: var(--card); color: var(--ink); }
+    .btn-convert {
+      background: var(--gold); color: var(--bg); border: 1px solid var(--gold);
+      font-size: .66rem; font-weight: 600; letter-spacing: .26em; text-transform: uppercase;
+      padding: .82rem 2rem; border-radius: 2px; cursor: pointer; transition: all .25s;
+    }
+    .btn-convert:hover { background: var(--gold-bright); border-color: var(--gold-bright); }
+    .btn-clear {
+      background: transparent; color: var(--muted); border: 1px solid var(--line);
+      font-size: .66rem; font-weight: 600; letter-spacing: .26em; text-transform: uppercase;
+      padding: .82rem 1.6rem; border-radius: 2px; cursor: pointer; transition: all .25s;
+    }
+    .btn-clear:hover { color: var(--ink); border-color: var(--line-strong); }
+    @media(max-width: 620px) {
+      .convert-form { align-items: stretch; flex-direction: column; }
+      .select-wrap, .tz-select { width: 100%; min-width: 0; }
+      .btn-convert, .btn-clear { width: 100%; padding: .9rem; }
+    }
+
     /* ── Converted ── */
     .converted-time {
       font-family: 'IBM Plex Mono', monospace; font-size: 1.22rem; font-weight: 400;
@@ -394,7 +439,7 @@
       td, th { padding: .85rem .9rem; }
     }
     @media(max-width: 540px) {
-      th:nth-child(5), td:nth-child(5) { display: none; }
+      th:nth-child(4), td:nth-child(4) { display: none; }
       .flag-wrap { width: 32px; height: 32px; font-size: 1rem; }
       body { padding-top: 2rem; }
     }
@@ -463,8 +508,7 @@
     <table>
       <thead>
         <tr>
-          <th>Region</th><th>Timezone</th><th>Local Time</th>
-          <th class="input-col">Enter a Time</th><th>GMT Offset</th>
+          <th>Region</th><th>Timezone</th><th>Local Time</th><th>GMT Offset</th>
         </tr>
       </thead>
       <tbody id="tz-table-body"></tbody>
@@ -492,8 +536,33 @@
   <div class="divider rise rise-4">
     <div class="divider-line"></div>
     <span class="divider-label">Converter</span>
-    <span class="divider-chip" id="converter-hint">Type a time above</span>
+    <span class="divider-chip" id="converter-hint">Choose a time &amp; timezone</span>
     <div class="divider-line"></div>
+  </div>
+
+  <div class="convert-card">
+    <div class="convert-form">
+      <div class="field">
+        <span class="field-label">Time</span>
+        <div class="time-input-wrap">
+          <input class="time-input" id="conv-input" type="text" inputmode="numeric" placeholder="2:30" maxlength="5"
+                 oninput="formatTimeField(this)" onkeydown="if(event.key==='Enter')runConvert()"
+                 autocomplete="off" aria-label="Time to convert"/>
+          <div class="ampm-toggle" id="form-ampm">
+            <button class="ampm-btn active" id="form-am" onclick="setFormAmPm('AM')">AM</button>
+            <button class="ampm-btn"        id="form-pm" onclick="setFormAmPm('PM')">PM</button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field-label">From timezone</span>
+        <div class="select-wrap">
+          <select class="tz-select" id="source-select" aria-label="Timezone to convert from"></select>
+        </div>
+      </div>
+      <button class="btn-convert" onclick="runConvert()">Convert</button>
+      <button class="btn-clear" id="btn-form-clear" onclick="resetConverter()" style="display:none">Clear</button>
+    </div>
   </div>
 
   <div class="table-card" id="converter-table-card" style="display:none;">
@@ -566,7 +635,7 @@ const allZones = () => [MERIDIAN, ...zones()];
 let use24h = store.get('wtd_use24h') === true;
 let themeOverride = store.get('wtd_theme') || null;
 let lastConverterInput = null; // { iana, val }
-const rowAmPm = {};            // keyed by iana
+let formAmPm = 'AM';
 
 function pad(n) { return String(n).padStart(2, '0'); }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -660,7 +729,7 @@ function setFormat(fmt) {
   document.getElementById('btn-ampm').classList.toggle('active', !use24h);
   document.getElementById('btn-24h').classList.toggle('active', use24h);
   applyFormatToInputs();
-  if (lastConverterInput) triggerConvert(lastConverterInput.iana, lastConverterInput.val);
+  if (lastConverterInput) triggerConvert(lastConverterInput.iana, lastConverterInput.hh, lastConverterInput.mm);
   updateClocks();
 }
 
@@ -714,15 +783,6 @@ function buildRows(justAddedIana) {
         <div class="time-cell"><span id="time-${id}">--:--:--</span><span class="ampm-tag" id="suffix-${id}"></span></div>
         <div class="date-cell" id="date-${id}">…</div>
       </td>
-      <td style="text-align:center">
-        <div class="time-input-wrap">
-          <input class="time-input" id="input-${id}" type="text" inputmode="numeric" placeholder="${use24h ? '14:30' : '2:30'}" maxlength="5" oninput="handleInput('${esc(z.iana)}',this)" autocomplete="off" aria-label="Enter a time in ${esc(z.name)}"/>
-          <div class="ampm-toggle" id="ampm-toggle-${id}" style="${use24h ? 'display:none' : ''}">
-            <button class="ampm-btn ${((rowAmPm[z.iana]||'AM')==='AM')?'active':''}" id="am-btn-${id}" onclick="setAmPm('${esc(z.iana)}','AM')">AM</button>
-            <button class="ampm-btn ${(rowAmPm[z.iana]==='PM')?'active':''}"        id="pm-btn-${id}" onclick="setAmPm('${esc(z.iana)}','PM')">PM</button>
-          </div>
-        </div>
-      </td>
       <td><span class="offset-pill" id="offset-${id}">…</span></td>`;
     tbody.appendChild(tr);
   });
@@ -745,15 +805,49 @@ function buildRows(justAddedIana) {
       <td><span class="offset-pill" id="conv-offset-${id}">…</span></td>`;
     ctbody.appendChild(tr);
   });
+  populateSourceSelect();
 }
 
-function setAmPm(iana, val) {
-  rowAmPm[iana] = val;
-  const id = idFor(iana);
-  document.getElementById(`am-btn-${id}`).classList.toggle('active', val==='AM');
-  document.getElementById(`pm-btn-${id}`).classList.toggle('active', val==='PM');
-  const inp = document.getElementById(`input-${id}`);
-  if (inp.value) handleInput(iana, inp);
+function populateSourceSelect() {
+  const sel = document.getElementById('source-select');
+  const prev = sel.value;
+  sel.innerHTML = allZones().map(z =>
+    `<option value="${esc(z.iana)}">${esc(z.flag)}&nbsp;&nbsp;${esc(z.name)} — ${esc(z.label)}</option>`
+  ).join('');
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+function setFormAmPm(val) {
+  formAmPm = val;
+  document.getElementById('form-am').classList.toggle('active', val === 'AM');
+  document.getElementById('form-pm').classList.toggle('active', val === 'PM');
+}
+
+function formatTimeField(el) {
+  let v = el.value.replace(/[^0-9:]/g, '');
+  if (v.length === 2 && !v.includes(':')) v += ':';
+  if (v.length > 5) v = v.slice(0, 5);
+  if (el.value !== v) el.value = v;
+}
+
+function runConvert() {
+  const el = document.getElementById('conv-input');
+  const v = el.value.trim();
+  if (!/^\d{1,2}:\d{2}$/.test(v)) {
+    showToast(use24h ? 'Enter a time like 14:30' : 'Enter a time like 2:30');
+    el.focus();
+    return;
+  }
+  let [hStr, mStr] = v.split(':');
+  let hh = parseInt(hStr, 10), mm = parseInt(mStr, 10);
+  if (mm > 59) { showToast('Minutes must be 00–59'); el.focus(); return; }
+  if (!use24h) {
+    if (hh < 1 || hh > 12) { showToast('Use hours 1–12 with AM/PM'); el.focus(); return; }
+    if (formAmPm === 'AM' && hh === 12) hh = 0;
+    if (formAmPm === 'PM' && hh !== 12) hh += 12;
+  } else if (hh > 23) { showToast('Hours must be 00–23'); el.focus(); return; }
+  el.classList.add('active');
+  triggerConvert(document.getElementById('source-select').value, hh, mm);
 }
 
 // ── Live clocks ───────────────────────────────────────────────────
@@ -864,7 +958,7 @@ function addZone(iana) {
   customZones.push(zone);
   store.set('wtd_custom_zones', customZones);
   buildRows(iana); updateClocks(); applyFormatToInputs();
-  if (lastConverterInput) triggerConvert(lastConverterInput.iana, lastConverterInput.val);
+  if (lastConverterInput) triggerConvert(lastConverterInput.iana, lastConverterInput.hh, lastConverterInput.mm);
   document.getElementById('tz-search').value = '';
   renderSearch('');
   toggleAddPanel(false);
@@ -877,7 +971,7 @@ function removeZone(iana) {
   store.set('wtd_custom_zones', customZones);
   if (lastConverterInput && lastConverterInput.iana === iana) { lastConverterInput = null; hideConverted(); resetInputs(); }
   buildRows(); updateClocks(); applyFormatToInputs();
-  if (lastConverterInput) triggerConvert(lastConverterInput.iana, lastConverterInput.val);
+  if (lastConverterInput) triggerConvert(lastConverterInput.iana, lastConverterInput.hh, lastConverterInput.mm);
   if (z) showToast(`${z.name} removed`);
 }
 
@@ -897,29 +991,10 @@ function showToast(msg) {
 }
 
 // ── Converter ─────────────────────────────────────────────────────
-function handleInput(iana, el) {
-  let v = el.value.replace(/[^0-9:]/g, '');
-  if (v.length === 2 && !v.includes(':')) v += ':';
-  if (v.length > 5) v = v.slice(0, 5);
-  if (el.value !== v) el.value = v;
-  document.querySelectorAll('.time-input').forEach(inp => inp.classList.toggle('active', inp === el));
-  if (/^\d{1,2}:\d{2}$/.test(v)) { triggerConvert(iana, v); }
-  else { lastConverterInput = null; hideConverted(); }
-}
-
-function triggerConvert(iana, v) {
-  const sourceZone = zones().find(z => z.iana === iana);
+function triggerConvert(iana, hh, mm) {
+  const sourceZone = allZones().find(z => z.iana === iana);
   if (!sourceZone) return;
-  lastConverterInput = { iana, val: v };
-  let [hStr, mStr] = v.split(':');
-  let hh = parseInt(hStr, 10), mm = parseInt(mStr, 10);
-  if (mm > 59) { hideConverted(); return; }
-  if (!use24h) {
-    const ap = rowAmPm[iana] || 'AM';
-    if (ap === 'AM' && hh === 12) hh = 0;
-    if (ap === 'PM' && hh !== 12) hh += 12;
-  }
-  if (hh > 23) { hideConverted(); return; }
+  lastConverterInput = { iana, hh, mm };
 
   const now = new Date();
   const dateInZone = new Intl.DateTimeFormat('en-CA', { timeZone: iana, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
@@ -938,6 +1013,7 @@ function triggerConvert(iana, v) {
 function showConverted(results, sourceZone, hh, mm) {
   document.getElementById('converter-table-card').style.display = 'block';
   document.getElementById('share-box').classList.add('visible');
+  document.getElementById('btn-form-clear').style.display = '';
   const inputLabel = use24h ? `${pad(hh)}:${pad(mm)}` : `${pad(hh%12===0?12:hh%12)}:${pad(mm)} ${hh>=12?'PM':'AM'}`;
   document.getElementById('converter-hint').textContent = `From ${sourceZone.name} at ${inputLabel}`;
 
@@ -975,10 +1051,13 @@ function showConverted(results, sourceZone, hh, mm) {
 function hideConverted() {
   document.getElementById('converter-table-card').style.display = 'none';
   document.getElementById('share-box').classList.remove('visible');
-  document.getElementById('converter-hint').textContent = 'Type a time above';
+  document.getElementById('btn-form-clear').style.display = 'none';
+  document.getElementById('converter-hint').textContent = 'Choose a time & timezone';
 }
 function resetInputs() {
-  document.querySelectorAll('.time-input').forEach(inp => { inp.value=''; inp.classList.remove('active'); });
+  const el = document.getElementById('conv-input');
+  el.value = ''; el.classList.remove('active');
+  el.focus();
 }
 function resetConverter() {
   resetInputs();
