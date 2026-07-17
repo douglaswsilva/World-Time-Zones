@@ -7,8 +7,8 @@
   <link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23c9a962' stroke-width='6'/><line x1='50' y1='50' x2='50' y2='22' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/><line x1='50' y1='50' x2='70' y2='58' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/></svg>">
   <style id="css-base">
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:ital,wght@0,300;0,400;0,500;0,600;1,300&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
-    html.design-esri .classic-only { display: none !important; }
-    html.design-classic .esri-only { display: none !important; }
+    html.design-atlas .classic-only { display: none !important; }
+    html.design-classic .atlas-only { display: none !important; }
   </style>
   <style id="css-classic" media="all">
     
@@ -453,11 +453,13 @@
     :root { --brand: var(--gold); --brand-hover: var(--gold-bright); --border-2: var(--line); }
     #dial { width: 96px; height: 96px; }
     .classic-header { max-width: 1040px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
+    .design-corner { position: absolute; top: 1.25rem; right: 1.25rem; z-index: 20; }
+    .design-corner .toggle-wrap { background: var(--bg); box-shadow: var(--shadow); }
   </style>
-  <style id="css-esri" media="not all">
+  <style id="css-atlas" media="not all">
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ═══ Calcite-inspired tokens · dark (default before JS resolves) ═══ */
+    /* ═══ Atlas tokens · dark (default before JS resolves) ═══ */
     :root {
       --canvas: #353535;
       --panel: #2b2b2b;
@@ -841,7 +843,7 @@
       .flag-wrap { width: 30px; height: 30px; font-size: .95rem; }
     }
   
-    /* ── merge shims (esri) ── */
+    /* ── merge shims (atlas) ── */
     #converter-table-card { margin-top: 1.25rem; }
   </style>
   <script>
@@ -849,19 +851,20 @@
       let d = 'classic';
       try {
         const s = JSON.parse(localStorage.getItem('wtd_design'));
-        if (s === 'classic' || s === 'esri') d = s;
+        if (s === 'classic' || s === 'atlas') d = s;
+        else if (s === 'esri') d = 'atlas';
       } catch (e) {}
-      document.documentElement.classList.remove('design-classic', 'design-esri');
-      document.documentElement.classList.add(d === 'classic' ? 'design-classic' : 'design-esri');
+      document.documentElement.classList.remove('design-classic', 'design-atlas');
+      document.documentElement.classList.add(d === 'classic' ? 'design-classic' : 'design-atlas');
       document.getElementById('css-classic').media = d === 'classic' ? 'all' : 'not all';
-      document.getElementById('css-esri').media = d === 'esri' ? 'all' : 'not all';
+      document.getElementById('css-atlas').media = d === 'atlas' ? 'all' : 'not all';
     })();
   </script>
 </head>
 <body>
 
-<!-- ═══ Esri header ═══ -->
-<header class="app-header esri-only">
+<!-- ═══ Atlas header ═══ -->
+<header class="app-header atlas-only">
   <div class="brand">
     <svg class="brand-globe" viewBox="0 0 100 100" fill="none" stroke-width="6" aria-hidden="true">
       <circle cx="50" cy="50" r="42"/>
@@ -875,10 +878,6 @@
   </div>
   <div class="header-controls">
     <span class="live-badge"><span class="dot"></span>Live</span>
-    <div class="toggle-wrap" role="group" aria-label="Design">
-      <button class="toggle-btn active js-btn-classic" onclick="setDesign('classic')">Classic</button>
-      <button class="toggle-btn js-btn-esri" onclick="setDesign('esri')">Esri</button>
-    </div>
     <div class="toggle-wrap" role="group" aria-label="Time format">
       <button class="toggle-btn active js-btn-ampm" onclick="setFormat('ampm')">AM/PM</button>
       <button class="toggle-btn js-btn-24h" onclick="setFormat('24h')">24 h</button>
@@ -886,12 +885,22 @@
     <button class="theme-pill" onclick="toggleTheme()">
       <span class="theme-glyph" aria-hidden="true"></span><span class="js-theme-label">Auto · Dark</span>
     </button>
+    <div class="toggle-wrap" role="group" aria-label="Design">
+      <button class="toggle-btn active js-btn-classic" onclick="setDesign('classic')">Classic</button>
+      <button class="toggle-btn js-btn-atlas" onclick="setDesign('atlas')">Atlas</button>
+    </div>
   </div>
 </header>
 
 <!-- ═══ Classic header ═══ -->
 <div class="meridians classic-only" aria-hidden="true">
   <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+</div>
+<div class="design-corner classic-only">
+  <div class="toggle-wrap" role="group" aria-label="Design">
+    <button class="toggle-btn active js-btn-classic" onclick="setDesign('classic')">Classic</button>
+    <button class="toggle-btn js-btn-atlas" onclick="setDesign('atlas')">Atlas</button>
+  </div>
 </div>
 <header class="classic-only classic-header rise">
   <div class="masthead-rule"></div>
@@ -901,10 +910,6 @@
   <div class="badge-row">
     <span class="live-badge"><span class="dot"></span>Live</span>
     <div class="ctrl-group">
-      <div class="toggle-wrap" role="group" aria-label="Design">
-        <button class="toggle-btn active js-btn-classic" onclick="setDesign('classic')">Classic</button>
-        <button class="toggle-btn js-btn-esri" onclick="setDesign('esri')">Esri</button>
-      </div>
       <div class="toggle-wrap" role="group" aria-label="Time format">
         <button class="toggle-btn active js-btn-ampm" onclick="setFormat('ampm')">AM·PM</button>
         <button class="toggle-btn js-btn-24h" onclick="setFormat('24h')">24 H</button>
@@ -951,7 +956,7 @@
     <span class="divider-chip">Updated every second</span>
     <div class="divider-line"></div>
   </div>
-  <div class="section-head esri-only fade">
+  <div class="section-head atlas-only fade">
     <h2>Live clocks</h2>
     <span class="section-meta">Updated every second</span>
   </div>
@@ -991,7 +996,7 @@
     <span class="divider-chip js-hint">Choose a time &amp; timezone</span>
     <div class="divider-line"></div>
   </div>
-  <div class="section-head esri-only">
+  <div class="section-head atlas-only">
     <h2>Converter</h2>
     <span class="section-meta js-hint">Choose a time &amp; timezone</span>
   </div>
@@ -1090,7 +1095,9 @@ const allZones = () => [MERIDIAN, ...zones()];
 
 let use24h = store.get('wtd_use24h') === true;
 let themeOverride = store.get('wtd_theme') || null;
-let design = ['classic','esri'].includes(store.get('wtd_design')) ? store.get('wtd_design') : 'classic';
+let storedDesign = store.get('wtd_design');
+if (storedDesign === 'esri') storedDesign = 'atlas';
+let design = ['classic','atlas'].includes(storedDesign) ? storedDesign : 'classic';
 let lastConverterInput = null; // { iana, val }
 let formAmPm = 'AM';
 
@@ -1206,20 +1213,20 @@ function toggleTheme() {
 }
 function checkAutoTheme() { if (!themeOverride) applyTheme(getAutoTheme()); }
 
-// ── Design (Classic / Esri) ──────────────────────────────────────
+// ── Design (Classic / Atlas) ──────────────────────────────────────
 const FAVICONS = {
   classic: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23c9a962' stroke-width='6'/><line x1='50' y1='50' x2='50' y2='22' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/><line x1='50' y1='50' x2='70' y2='58' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/></svg>",
-  esri: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%23007AC2' stroke-width='8'/><ellipse cx='50' cy='50' rx='18' ry='42' fill='none' stroke='%23007AC2' stroke-width='6'/><line x1='8' y1='50' x2='92' y2='50' stroke='%23007AC2' stroke-width='6'/></svg>"
+  atlas: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%23007AC2' stroke-width='8'/><ellipse cx='50' cy='50' rx='18' ry='42' fill='none' stroke='%23007AC2' stroke-width='6'/><line x1='8' y1='50' x2='92' y2='50' stroke='%23007AC2' stroke-width='6'/></svg>"
 };
 function setHint(t) { document.querySelectorAll('.js-hint').forEach(el => el.textContent = t); }
 function applyDesign(d) {
   document.documentElement.classList.toggle('design-classic', d === 'classic');
-  document.documentElement.classList.toggle('design-esri', d === 'esri');
+  document.documentElement.classList.toggle('design-atlas', d === 'atlas');
   // media swap is honored dynamically by every engine (style.disabled is not)
   document.getElementById('css-classic').media = d === 'classic' ? 'all' : 'not all';
-  document.getElementById('css-esri').media = d === 'esri' ? 'all' : 'not all';
+  document.getElementById('css-atlas').media = d === 'atlas' ? 'all' : 'not all';
   document.querySelectorAll('.js-btn-classic').forEach(b => b.classList.toggle('active', d === 'classic'));
-  document.querySelectorAll('.js-btn-esri').forEach(b => b.classList.toggle('active', d === 'esri'));
+  document.querySelectorAll('.js-btn-atlas').forEach(b => b.classList.toggle('active', d === 'atlas'));
   document.getElementById('favicon').href = FAVICONS[d];
   applyTheme(themeOverride || getAutoTheme());
 }
