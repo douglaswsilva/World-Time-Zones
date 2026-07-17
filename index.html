@@ -1,12 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="design-classic">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>World Time — Flight Team</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23c9a962' stroke-width='6'/><line x1='50' y1='50' x2='50' y2='22' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/><line x1='50' y1='50' x2='70' y2='58' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/></svg>">
-  <style>
+  <title>World Time Zones — Flight Team</title>
+  <link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23c9a962' stroke-width='6'/><line x1='50' y1='50' x2='50' y2='22' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/><line x1='50' y1='50' x2='70' y2='58' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/></svg>">
+  <style id="css-base">
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:ital,wght@0,300;0,400;0,500;0,600;1,300&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+    html.design-esri .classic-only { display: none !important; }
+    html.design-classic .esri-only { display: none !important; }
+  </style>
+  <style id="css-classic" media="all">
+    
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     /* ════ NIGHT ════ */
@@ -443,45 +448,488 @@
       .flag-wrap { width: 32px; height: 32px; font-size: 1rem; }
       body { padding-top: 2rem; }
     }
+  
+    /* ── merge shims (classic) ── */
+    :root { --brand: var(--gold); --brand-hover: var(--gold-bright); --border-2: var(--line); }
+    #dial { width: 96px; height: 96px; }
+    .classic-header { max-width: 1040px; margin-left: auto; margin-right: auto; position: relative; z-index: 1; }
   </style>
+  <style id="css-esri" media="not all">
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ═══ Calcite-inspired tokens · dark (default before JS resolves) ═══ */
+    :root {
+      --canvas: #353535;
+      --panel: #2b2b2b;
+      --panel-2: #242424;
+      --panel-3: #404040;
+      --border-1: #555555;
+      --border-2: #4a4a4a;
+      --border-3: #404040;
+      --text-1: #ffffff;
+      --text-2: #bfbfbf;
+      --text-3: #9f9f9f;
+      --brand: #009af2;
+      --brand-hover: #007ac2;
+      --success: #3bb54a;
+      --danger: #e0533d;
+      --shadow-panel: 0 1px 3px rgba(0,0,0,.35);
+      --shadow-float: 0 4px 16px rgba(0,0,0,.45);
+      --dial-face: #242424;
+      --dial-hand: #e6e6e6;
+    }
+    /* ═══ light ═══ */
+    html.light {
+      --canvas: #f8f8f8;
+      --panel: #ffffff;
+      --panel-2: #f3f3f3;
+      --panel-3: #eaeaea;
+      --border-1: #cacaca;
+      --border-2: #dfdfdf;
+      --border-3: #eaeaea;
+      --text-1: #151515;
+      --text-2: #4a4a4a;
+      --text-3: #6a6a6a;
+      --brand: #007ac2;
+      --brand-hover: #00619b;
+      --success: #35ac46;
+      --danger: #d83020;
+      --shadow-panel: 0 1px 2px rgba(0,0,0,.08);
+      --shadow-float: 0 4px 16px rgba(0,0,0,.16);
+      --dial-face: #ffffff;
+      --dial-hand: #2b2b2b;
+    }
+
+    html { background: var(--canvas); }
+    body {
+      background: var(--canvas); color: var(--text-1);
+      font-family: "Avenir Next", "Avenir", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 14px; line-height: 1.45;
+      min-height: 100vh;
+      transition: background .4s, color .4s;
+    }
+    button { font-family: inherit; font-size: inherit; }
+    :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+    .mono { font-family: "SF Mono", "Consolas", "Menlo", ui-monospace, monospace; }
+
+    @keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .fade { animation: fade-up .35s ease-out both; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+
+    /* ═══ App header ═══ */
+    .app-header {
+      background: var(--panel); border-bottom: 1px solid var(--border-2);
+      padding: .8rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      box-shadow: var(--shadow-panel);
+      position: relative; z-index: 5;
+      transition: background .4s;
+    }
+    .brand { display: flex; align-items: center; gap: .8rem; }
+    .brand-globe { width: 30px; height: 30px; flex-shrink: 0; }
+    .brand-globe circle, .brand-globe ellipse, .brand-globe line { stroke: var(--brand); }
+    .brand-title { font-size: 1.1rem; font-weight: 600; color: var(--text-1); letter-spacing: .01em; }
+    .brand-sub { font-size: .74rem; color: var(--text-3); margin-top: .05rem; }
+
+    .header-controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .live-badge { display: inline-flex; align-items: center; gap: .45rem; font-size: .78rem; font-weight: 500; color: var(--text-3); }
+    .live-badge .dot { width: 8px; height: 8px; background: var(--brand); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .toggle-wrap { display: inline-flex; border: 1px solid var(--brand); overflow: hidden; }
+    .toggle-btn {
+      font-size: .8rem; font-weight: 500; padding: .35rem .85rem;
+      border: none; cursor: pointer; background: transparent; color: var(--brand);
+      transition: background .15s, color .15s;
+    }
+    .toggle-btn + .toggle-btn { border-left: 1px solid var(--brand); }
+    .toggle-btn.active { background: var(--brand); color: #fff; }
+    .toggle-btn:not(.active):hover { background: color-mix(in srgb, var(--brand) 10%, transparent); }
+
+    .theme-pill {
+      display: inline-flex; align-items: center; gap: .5rem;
+      border: 1px solid var(--border-1); background: transparent;
+      padding: .35rem .85rem; font-size: .8rem; font-weight: 500;
+      color: var(--text-2); cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .theme-pill:hover { background: var(--panel-2); border-color: var(--text-3); }
+    .theme-glyph { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid currentColor; position: relative; overflow: hidden; }
+    html:not(.light) .theme-glyph::after { content:''; position: absolute; inset: -2px; left: 3px; background: var(--panel); }
+
+    /* ═══ Content ═══ */
+    .content { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+
+    .section-head { display: flex; align-items: baseline; gap: .9rem; margin: 1.9rem 0 .8rem; flex-wrap: wrap; }
+    .section-head h2 { font-size: 1.05rem; font-weight: 600; color: var(--text-1); }
+    .section-meta { font-size: .78rem; color: var(--text-3); }
+    .section-meta.hint-active { color: var(--brand); font-weight: 500; }
+
+    .panel {
+      background: var(--panel); border: 1px solid var(--border-2); border-radius: 2px;
+      box-shadow: var(--shadow-panel); overflow: hidden;
+      transition: background .4s;
+    }
+
+    /* ═══ Meridian panel ═══ */
+    .meridian-card {
+      background: var(--panel); border: 1px solid var(--border-2); border-radius: 2px;
+      border-top: 3px solid var(--brand);
+      box-shadow: var(--shadow-panel);
+      padding: 1.4rem 1.75rem;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;
+      transition: background .4s;
+    }
+    .meridian-left { display: flex; align-items: center; gap: 1.4rem; }
+    .dial-wrap { flex-shrink: 0; }
+    .meridian-label { font-size: .72rem; font-weight: 600; color: var(--brand); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .3rem; }
+    .meridian-name { font-size: 1.2rem; font-weight: 600; color: var(--text-1); }
+    .meridian-tz { font-size: .8rem; color: var(--text-3); margin-top: .2rem; }
+    .meridian-right { text-align: right; }
+    .meridian-clock {
+      font-family: "SF Mono", "Consolas", "Menlo", ui-monospace, monospace;
+      font-size: clamp(1.8rem, 4.5vw, 2.5rem); font-weight: 500;
+      color: var(--brand); font-variant-numeric: tabular-nums; letter-spacing: .01em;
+    }
+    .meridian-clock .ampm { font-size: .4em; font-weight: 600; margin-left: .35rem; vertical-align: 16%; }
+    .meridian-date { font-size: .8rem; color: var(--text-3); margin-top: .25rem; }
+
+    /* ═══ Tables ═══ */
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      padding: .7rem 1.25rem; text-align: left;
+      font-size: .74rem; font-weight: 600; color: var(--text-3);
+      background: var(--panel-2); border-bottom: 1px solid var(--border-2);
+    }
+    th:last-child, td:last-child { text-align: right; }
+    tbody tr { border-bottom: 1px solid var(--border-3); transition: background .12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--panel-2); }
+    td { padding: .85rem 1.25rem; vertical-align: middle; }
+    tbody tr.just-added { animation: fade-up .35s ease-out both; }
+
+    .region-cell { display: flex; align-items: center; gap: .85rem; }
+    .flag-wrap {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 1px solid var(--border-2); background: var(--panel-2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.05rem; flex-shrink: 0;
+    }
+    .region-name { font-weight: 600; font-size: .92rem; color: var(--text-1); display: flex; align-items: center; gap: .5rem; }
+    .region-sub { font-size: .76rem; color: var(--text-3); margin-top: .1rem; }
+    .custom-chip {
+      font-size: .64rem; font-weight: 600; color: var(--brand);
+      border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent);
+      background: color-mix(in srgb, var(--brand) 9%, transparent);
+      border-radius: 10px; padding: .08rem .5rem;
+    }
+    .remove-btn {
+      border: none; background: transparent; color: var(--text-3);
+      width: 24px; height: 24px; border-radius: 2px; cursor: pointer;
+      font-size: .9rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .15s, color .15s, background .15s; flex-shrink: 0;
+    }
+    tr:hover .remove-btn, .remove-btn:focus-visible { opacity: 1; }
+    .remove-btn:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+    @media (hover: none) { .remove-btn { opacity: 1; } }
+
+    .tz-chip {
+      display: inline-flex; font-size: .74rem; font-weight: 500;
+      color: var(--text-2); background: var(--panel-2);
+      border: 1px solid var(--border-2); border-radius: 12px; padding: .22rem .7rem;
+      white-space: nowrap;
+    }
+
+    .time-cell {
+      font-family: "SF Mono", "Consolas", "Menlo", ui-monospace, monospace;
+      font-size: 1.12rem; font-weight: 500; color: var(--text-1);
+      display: flex; align-items: baseline; gap: .5rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .ampm-tag { font-size: .68rem; font-weight: 600; color: var(--text-3); }
+    .date-cell { font-size: .74rem; color: var(--text-3); margin-top: .2rem; }
+
+    .offset-pill {
+      display: inline-flex; align-items: center; gap: .45rem;
+      font-family: "SF Mono", "Consolas", "Menlo", ui-monospace, monospace;
+      font-size: .76rem; font-weight: 600;
+      border-radius: 2px; padding: .28rem .6rem;
+    }
+    .offset-ahead  { color: var(--success); background: color-mix(in srgb, var(--success) 11%, transparent); }
+    .offset-behind { color: var(--danger);  background: color-mix(in srgb, var(--danger) 11%, transparent); }
+    .offset-same   { color: var(--brand);   background: color-mix(in srgb, var(--brand) 11%, transparent); }
+
+    /* ═══ Add location ═══ */
+    .add-row-btn {
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      width: 100%; padding: .75rem 1.25rem; border: none; cursor: pointer;
+      background: transparent; color: var(--brand);
+      font-size: .85rem; font-weight: 600;
+      border-top: 1px solid var(--border-3); transition: background .15s;
+    }
+    .add-row-btn:hover { background: color-mix(in srgb, var(--brand) 7%, transparent); }
+    .add-row-btn .plus { font-size: 1.05rem; font-weight: 500; line-height: 0; }
+
+    .add-panel { display: none; border-top: 1px solid var(--border-2); padding: 1.1rem 1.25rem 1.3rem; background: var(--panel-2); }
+    .add-panel.open { display: block; animation: fade-up .25s ease-out both; }
+    .add-panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; flex-wrap: wrap; }
+    .add-panel-title { font-size: .9rem; font-weight: 600; color: var(--text-1); }
+    .add-panel-note { font-size: .74rem; color: var(--text-3); }
+    .search-wrap { position: relative; }
+    .search-input {
+      width: 100%; font-family: inherit; font-size: .9rem;
+      background: var(--panel); border: 1px solid var(--border-1); border-radius: 2px;
+      color: var(--text-1); padding: .55rem .8rem .55rem 2.2rem;
+      outline: none; transition: border-color .15s;
+    }
+    .search-input::placeholder { color: var(--text-3); }
+    .search-input:focus { border-color: var(--brand); }
+    .search-icon { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    .search-icon svg { display: block; width: 14px; height: 14px; stroke: var(--text-3); }
+    .search-results { margin-top: .6rem; border: 1px solid var(--border-2); border-radius: 2px; overflow: hidden; background: var(--panel); max-height: 320px; overflow-y: auto; }
+    .search-results:empty { display: none; }
+    .search-result {
+      display: flex; align-items: center; gap: .85rem; width: 100%;
+      padding: .6rem .9rem; border: none; background: transparent; cursor: pointer;
+      text-align: left; border-bottom: 1px solid var(--border-3);
+      border-left: 3px solid transparent;
+      transition: background .12s, border-color .12s;
+      color: var(--text-1); font-family: inherit;
+    }
+    .search-result:last-child { border-bottom: none; }
+    .search-result:hover, .search-result.highlighted { background: var(--panel-2); border-left-color: var(--brand); }
+    .search-result .sr-flag { font-size: 1rem; width: 24px; text-align: center; flex-shrink: 0; }
+    .sr-city { font-weight: 600; font-size: .88rem; }
+    .sr-region { font-size: .74rem; color: var(--text-3); margin-top: .05rem; }
+    .sr-time { margin-left: auto; font-family: "SF Mono", "Consolas", "Menlo", ui-monospace, monospace; font-size: .8rem; color: var(--brand); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .sr-empty { padding: .8rem .9rem; font-size: .82rem; color: var(--text-3); }
+    .sr-added {
+      font-size: .62rem; font-weight: 600; color: var(--success);
+      background: color-mix(in srgb, var(--success) 11%, transparent);
+      border-radius: 10px; padding: .1rem .45rem; margin-left: .5rem;
+    }
+
+    /* ═══ Converter form ═══ */
+    .convert-card {
+      background: var(--panel); border: 1px solid var(--border-2); border-radius: 2px;
+      box-shadow: var(--shadow-panel); padding: 1.25rem 1.5rem;
+      transition: background .4s;
+    }
+    .convert-form { display: flex; align-items: flex-end; gap: 1.25rem; flex-wrap: wrap; }
+    .field { display: flex; flex-direction: column; gap: .4rem; }
+    .field-label { font-size: .78rem; font-weight: 600; color: var(--text-2); }
+    .time-input-wrap { display: flex; align-items: center; gap: .45rem; }
+    .time-input {
+      font-family: "SF Mono", "Consolas", "Menlo", ui-monospace, monospace;
+      font-size: .95rem; font-weight: 500;
+      background: var(--panel); border: 1px solid var(--border-1); border-radius: 2px;
+      color: var(--text-1); padding: .5rem .5rem;
+      width: 100px; text-align: center; outline: none;
+      transition: border-color .15s;
+      font-variant-numeric: tabular-nums;
+    }
+    .time-input::placeholder { color: var(--text-3); font-weight: 400; }
+    .time-input:focus { border-color: var(--brand); }
+    .time-input.active { border-color: var(--brand); color: var(--brand); }
+    .ampm-toggle { display: inline-flex; border: 1px solid var(--brand); overflow: hidden; }
+    .ampm-btn {
+      font-size: .76rem; font-weight: 600; padding: .5rem .55rem;
+      border: none; background: transparent; color: var(--brand);
+      cursor: pointer; transition: background .15s, color .15s; line-height: 1;
+    }
+    .ampm-btn + .ampm-btn { border-left: 1px solid var(--brand); }
+    .ampm-btn.active { background: var(--brand); color: #fff; }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: ''; position: absolute; right: .85rem; top: 50%;
+      width: 7px; height: 7px; border-right: 1.5px solid var(--text-3); border-bottom: 1.5px solid var(--text-3);
+      transform: translateY(-72%) rotate(45deg); pointer-events: none;
+    }
+    .tz-select {
+      font-family: inherit; font-size: .9rem;
+      background: var(--panel); color: var(--text-1);
+      border: 1px solid var(--border-1); border-radius: 2px;
+      padding: .5rem 2.2rem .5rem .8rem; outline: none;
+      appearance: none; -webkit-appearance: none; cursor: pointer;
+      min-width: 250px; transition: border-color .15s;
+    }
+    .tz-select:focus { border-color: var(--brand); }
+    .tz-select option { background: var(--panel); color: var(--text-1); }
+    .btn-convert {
+      background: var(--brand); color: #fff; border: 1px solid var(--brand);
+      font-size: .88rem; font-weight: 600;
+      padding: .55rem 1.6rem; border-radius: 2px; cursor: pointer; transition: background .15s;
+    }
+    .btn-convert:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+    .btn-clear {
+      background: transparent; color: var(--brand); border: 1px solid var(--brand);
+      font-size: .88rem; font-weight: 600;
+      padding: .55rem 1.3rem; border-radius: 2px; cursor: pointer; transition: background .15s;
+    }
+    .btn-clear:hover { background: color-mix(in srgb, var(--brand) 10%, transparent); }
+    @media(max-width: 620px) {
+      .convert-form { align-items: stretch; flex-direction: column; }
+      .select-wrap, .tz-select { width: 100%; min-width: 0; }
+      .btn-convert, .btn-clear { width: 100%; padding: .7rem; }
+    }
+
+    .converted-time {
+      font-family: "SF Mono", "Consolas", "Menlo", ui-monospace, monospace;
+      font-size: 1.12rem; font-weight: 500; color: var(--brand);
+      display: flex; align-items: baseline; gap: .5rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ═══ Share ═══ */
+    .share-box {
+      background: var(--panel); border: 1px solid var(--border-2); border-radius: 2px;
+      box-shadow: var(--shadow-panel); padding: 1.25rem 1.5rem; margin-top: 1.25rem;
+      display: none; transition: background .4s;
+    }
+    .share-box.visible { display: block; }
+    .share-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .9rem; flex-wrap: wrap; gap: .75rem; }
+    .share-title { font-size: .95rem; font-weight: 600; color: var(--text-1); }
+    .share-actions { display: flex; gap: .5rem; }
+    .btn-copy {
+      background: var(--brand); color: #fff; border: 1px solid var(--brand);
+      font-size: .82rem; font-weight: 600; padding: .45rem 1.2rem;
+      border-radius: 2px; cursor: pointer; transition: background .15s;
+    }
+    .btn-copy:hover { background: var(--brand-hover); }
+    .btn-copy.copied { background: var(--success); border-color: var(--success); }
+    .btn-reset {
+      background: transparent; color: var(--brand); border: 1px solid var(--brand);
+      font-size: .82rem; font-weight: 600; padding: .45rem 1.1rem;
+      border-radius: 2px; cursor: pointer; transition: background .15s;
+    }
+    .btn-reset:hover { background: color-mix(in srgb, var(--brand) 10%, transparent); }
+    .share-text {
+      font-family: "SF Mono", "Consolas", "Menlo", ui-monospace, monospace;
+      font-size: .78rem; line-height: 1.9; color: var(--text-2);
+      background: var(--panel-2); border: 1px solid var(--border-3); border-radius: 2px;
+      padding: 1rem 1.2rem; white-space: pre-wrap; word-break: break-word; user-select: all;
+    }
+
+    /* ═══ Toast ═══ */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translate(-50%, 12px);
+      background: var(--panel); border: 1px solid var(--border-2);
+      border-left: 3px solid var(--brand);
+      color: var(--text-1); font-size: .84rem; font-weight: 500;
+      padding: .7rem 1.2rem; border-radius: 2px;
+      box-shadow: var(--shadow-float);
+      opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s;
+      z-index: 100; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    footer { text-align: center; margin-top: 2.5rem; font-size: .76rem; color: var(--text-3); line-height: 2; }
+    footer a { color: var(--brand); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media(max-width: 760px) {
+      th:nth-child(2), td:nth-child(2) { display: none; }
+      .meridian-card { justify-content: center; text-align: center; }
+      .meridian-left { flex-direction: column; text-align: center; gap: .9rem; }
+      .meridian-right { text-align: center; }
+      td, th { padding: .7rem .8rem; }
+      .app-header { justify-content: center; text-align: center; }
+    }
+    @media(max-width: 540px) {
+      th:nth-child(4), td:nth-child(4) { display: none; }
+      .flag-wrap { width: 30px; height: 30px; font-size: .95rem; }
+    }
+  
+    /* ── merge shims (esri) ── */
+    #converter-table-card { margin-top: 1.25rem; }
+  </style>
+  <script>
+    (function () {
+      let d = 'classic';
+      try {
+        const s = JSON.parse(localStorage.getItem('wtd_design'));
+        if (s === 'classic' || s === 'esri') d = s;
+      } catch (e) {}
+      document.documentElement.classList.remove('design-classic', 'design-esri');
+      document.documentElement.classList.add(d === 'classic' ? 'design-classic' : 'design-esri');
+      document.getElementById('css-classic').media = d === 'classic' ? 'all' : 'not all';
+      document.getElementById('css-esri').media = d === 'esri' ? 'all' : 'not all';
+    })();
+  </script>
 </head>
 <body>
-  <div class="meridians" aria-hidden="true">
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-  </div>
 
-<div class="wrapper">
-  <header class="rise">
-    <div class="masthead-rule"></div>
-    <p class="hero-eyebrow">Flight Team · Global Coordination</p>
-    <h1>World <em>Time</em></h1>
-    <p class="hero-sub">Live clocks and instant conversions across every region, anchored to the Prime Meridian.</p>
-    <div class="badge-row">
-      <span class="live-badge"><span class="dot"></span>Live</span>
-      <div class="ctrl-group">
-        <div class="toggle-wrap">
-          <button class="toggle-btn active" id="btn-ampm" onclick="setFormat('ampm')">AM·PM</button>
-          <button class="toggle-btn"        id="btn-24h"  onclick="setFormat('24h')">24 H</button>
-        </div>
-        <button class="theme-pill" onclick="toggleTheme()">
-          <span class="theme-glyph" aria-hidden="true"></span><span id="theme-label">Auto · Night</span>
-        </button>
-      </div>
+<!-- ═══ Esri header ═══ -->
+<header class="app-header esri-only">
+  <div class="brand">
+    <svg class="brand-globe" viewBox="0 0 100 100" fill="none" stroke-width="6" aria-hidden="true">
+      <circle cx="50" cy="50" r="42"/>
+      <ellipse cx="50" cy="50" rx="18" ry="42"/>
+      <line x1="8" y1="50" x2="92" y2="50"/>
+    </svg>
+    <div>
+      <div class="brand-title">World Time Zones</div>
+      <div class="brand-sub">Flight Team · Global Coordination</div>
     </div>
-  </header>
+  </div>
+  <div class="header-controls">
+    <span class="live-badge"><span class="dot"></span>Live</span>
+    <div class="toggle-wrap" role="group" aria-label="Design">
+      <button class="toggle-btn active js-btn-classic" onclick="setDesign('classic')">Classic</button>
+      <button class="toggle-btn js-btn-esri" onclick="setDesign('esri')">Esri</button>
+    </div>
+    <div class="toggle-wrap" role="group" aria-label="Time format">
+      <button class="toggle-btn active js-btn-ampm" onclick="setFormat('ampm')">AM/PM</button>
+      <button class="toggle-btn js-btn-24h" onclick="setFormat('24h')">24 h</button>
+    </div>
+    <button class="theme-pill" onclick="toggleTheme()">
+      <span class="theme-glyph" aria-hidden="true"></span><span class="js-theme-label">Auto · Dark</span>
+    </button>
+  </div>
+</header>
 
-  <!-- Meridian Hero -->
-  <div class="meridian-card rise rise-1">
+<!-- ═══ Classic header ═══ -->
+<div class="meridians classic-only" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+</div>
+<header class="classic-only classic-header rise">
+  <div class="masthead-rule"></div>
+  <p class="hero-eyebrow">Flight Team · Global Coordination</p>
+  <h1>World <em>Time</em></h1>
+  <p class="hero-sub">Live clocks and instant conversions across every region, anchored to the Prime Meridian.</p>
+  <div class="badge-row">
+    <span class="live-badge"><span class="dot"></span>Live</span>
+    <div class="ctrl-group">
+      <div class="toggle-wrap" role="group" aria-label="Design">
+        <button class="toggle-btn active js-btn-classic" onclick="setDesign('classic')">Classic</button>
+        <button class="toggle-btn js-btn-esri" onclick="setDesign('esri')">Esri</button>
+      </div>
+      <div class="toggle-wrap" role="group" aria-label="Time format">
+        <button class="toggle-btn active js-btn-ampm" onclick="setFormat('ampm')">AM·PM</button>
+        <button class="toggle-btn js-btn-24h" onclick="setFormat('24h')">24 H</button>
+      </div>
+      <button class="theme-pill" onclick="toggleTheme()">
+        <span class="theme-glyph" aria-hidden="true"></span><span class="js-theme-label">Auto · Night</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="content wrapper">
+
+  <!-- Meridian panel -->
+  <div class="meridian-card rise rise-1 fade">
     <div class="meridian-left">
       <div class="dial-wrap">
-        <svg id="dial" width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="Analog clock showing Greenwich Mean Time">
-          <circle cx="48" cy="48" r="46" fill="var(--dial-face)" stroke="var(--gold)" stroke-width="1"/>
-          <circle cx="48" cy="48" r="42" fill="none" stroke="var(--line)" stroke-width="1"/>
-          <g id="dial-ticks" stroke="var(--gold)"></g>
-          <line id="hand-h" x1="48" y1="48" x2="48" y2="27" stroke="var(--dial-hand)" stroke-width="2.4" stroke-linecap="round"/>
-          <line id="hand-m" x1="48" y1="48" x2="48" y2="15" stroke="var(--dial-hand)" stroke-width="1.5" stroke-linecap="round"/>
-          <line id="hand-s" x1="48" y1="54" x2="48" y2="12" stroke="var(--gold)" stroke-width=".8" stroke-linecap="round"/>
-          <circle cx="48" cy="48" r="2.2" fill="var(--gold)"/>
+        <svg id="dial" width="84" height="84" viewBox="0 0 96 96" role="img" aria-label="Analog clock showing Greenwich Mean Time">
+          <circle cx="48" cy="48" r="46" fill="var(--dial-face)" stroke="var(--brand)" stroke-width="1.5"/>
+          <circle cx="48" cy="48" r="42" fill="none" stroke="var(--border-2)" stroke-width="1"/>
+          <g id="dial-ticks" stroke="var(--brand)"></g>
+          <line id="hand-h" x1="48" y1="48" x2="48" y2="27" stroke="var(--dial-hand)" stroke-width="2.6" stroke-linecap="round"/>
+          <line id="hand-m" x1="48" y1="48" x2="48" y2="15" stroke="var(--dial-hand)" stroke-width="1.6" stroke-linecap="round"/>
+          <line id="hand-s" x1="48" y1="54" x2="48" y2="12" stroke="var(--brand)" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="48" cy="48" r="2.2" fill="var(--brand)"/>
         </svg>
       </div>
       <div>
@@ -496,19 +944,23 @@
     </div>
   </div>
 
-  <!-- Live Table -->
-  <div class="divider rise rise-2">
+  <!-- Live clocks heading -->
+  <div class="divider classic-only rise rise-2">
     <div class="divider-line"></div>
     <span class="divider-label">Live Clocks</span>
     <span class="divider-chip">Updated every second</span>
     <div class="divider-line"></div>
   </div>
+  <div class="section-head esri-only fade">
+    <h2>Live clocks</h2>
+    <span class="section-meta">Updated every second</span>
+  </div>
 
-  <div class="table-card rise rise-3">
+  <div class="panel table-card rise rise-3 fade">
     <table>
       <thead>
         <tr>
-          <th>Region</th><th>Timezone</th><th>Local Time</th><th>GMT Offset</th>
+          <th>Region</th><th>Timezone</th><th>Local time</th><th>GMT offset</th>
         </tr>
       </thead>
       <tbody id="tz-table-body"></tbody>
@@ -523,7 +975,7 @@
       </div>
       <div class="search-wrap">
         <span class="search-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
         </span>
         <input class="search-input" id="tz-search" type="text" placeholder="Tokyo, Lisbon, Auckland, Pacific/Honolulu…" autocomplete="off"
                oninput="renderSearch(this.value)" onkeydown="searchKeydown(event)" />
@@ -532,12 +984,16 @@
     </div>
   </div>
 
-  <!-- Converter -->
-  <div class="divider rise rise-4">
+  <!-- Converter heading -->
+  <div class="divider classic-only rise rise-4">
     <div class="divider-line"></div>
     <span class="divider-label">Converter</span>
-    <span class="divider-chip" id="converter-hint">Choose a time &amp; timezone</span>
+    <span class="divider-chip js-hint">Choose a time &amp; timezone</span>
     <div class="divider-line"></div>
+  </div>
+  <div class="section-head esri-only">
+    <h2>Converter</h2>
+    <span class="section-meta js-hint">Choose a time &amp; timezone</span>
   </div>
 
   <div class="convert-card">
@@ -548,7 +1004,7 @@
           <input class="time-input" id="conv-input" type="text" inputmode="numeric" placeholder="2:30" maxlength="5"
                  oninput="formatTimeField(this)" onkeydown="if(event.key==='Enter')runConvert()"
                  autocomplete="off" aria-label="Time to convert"/>
-          <div class="ampm-toggle" id="form-ampm">
+          <div class="ampm-toggle" id="form-ampm" role="group" aria-label="AM or PM">
             <button class="ampm-btn active" id="form-am" onclick="setFormAmPm('AM')">AM</button>
             <button class="ampm-btn"        id="form-pm" onclick="setFormAmPm('PM')">PM</button>
           </div>
@@ -565,16 +1021,15 @@
     </div>
   </div>
 
-  <div class="table-card" id="converter-table-card" style="display:none;">
+  <div class="panel table-card" id="converter-table-card" style="display:none;">
     <table>
       <thead>
-        <tr><th>Region</th><th>Timezone</th><th>Converted Time</th><th>GMT Offset</th></tr>
+        <tr><th>Region</th><th>Timezone</th><th>Converted time</th><th>GMT offset</th></tr>
       </thead>
       <tbody id="converted-table-body"></tbody>
     </table>
   </div>
 
-  <!-- Share -->
   <div class="share-box" id="share-box">
     <div class="share-header">
       <span class="share-title">Shareable breakdown</span>
@@ -587,15 +1042,16 @@
   </div>
 
   <footer>
-    <div class="footer-rule"></div>
+    <div class="footer-rule classic-only"></div>
     <p>Clocks update every second · Offsets relative to UTC/GMT+0<br>
       <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA Reference</a>
     </p>
     <p style="margin-top:1rem;">
-      <img src="https://hits.sh/timezonesflightteam.com.svg?style=flat-square&label=visitors&color=c9a962&labelColor=121724" alt="Visitor Count" />
+      <img src="https://hits.sh/timezonesflightteam.com.svg?style=flat-square&label=visitors&color=8a8a8a&labelColor=2b2b2b" alt="Visitor Count" />
     </p>
   </footer>
-</div>
+
+</main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -634,6 +1090,7 @@ const allZones = () => [MERIDIAN, ...zones()];
 
 let use24h = store.get('wtd_use24h') === true;
 let themeOverride = store.get('wtd_theme') || null;
+let design = ['classic','esri'].includes(store.get('wtd_design')) ? store.get('wtd_design') : 'classic';
 let lastConverterInput = null; // { iana, val }
 let formAmPm = 'AM';
 
@@ -726,8 +1183,8 @@ function updateDial(p) {
 function setFormat(fmt) {
   use24h = fmt === '24h';
   store.set('wtd_use24h', use24h);
-  document.getElementById('btn-ampm').classList.toggle('active', !use24h);
-  document.getElementById('btn-24h').classList.toggle('active', use24h);
+  document.querySelectorAll('.js-btn-ampm').forEach(b => b.classList.toggle('active', !use24h));
+  document.querySelectorAll('.js-btn-24h').forEach(b => b.classList.toggle('active', use24h));
   applyFormatToInputs();
   if (lastConverterInput) triggerConvert(lastConverterInput.iana, lastConverterInput.hh, lastConverterInput.mm);
   updateClocks();
@@ -738,7 +1195,8 @@ function getAutoTheme() { const h = new Date().getHours(); return (h >= 19 || h 
 function applyTheme(t) {
   document.documentElement.classList.toggle('light', t === 'light');
   const isLight = t === 'light', isAuto = themeOverride === null;
-  document.getElementById('theme-label').textContent = (isAuto ? 'Auto · ' : '') + (isLight ? 'Day' : 'Night');
+  const dayWord = design === 'classic' ? (isLight ? 'Day' : 'Night') : (isLight ? 'Light' : 'Dark');
+  document.querySelectorAll('.js-theme-label').forEach(el => el.textContent = (isAuto ? 'Auto · ' : '') + dayWord);
 }
 function toggleTheme() {
   const cur = document.documentElement.classList.contains('light') ? 'light' : 'dark';
@@ -747,6 +1205,29 @@ function toggleTheme() {
   applyTheme(themeOverride);
 }
 function checkAutoTheme() { if (!themeOverride) applyTheme(getAutoTheme()); }
+
+// ── Design (Classic / Esri) ──────────────────────────────────────
+const FAVICONS = {
+  classic: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23c9a962' stroke-width='6'/><line x1='50' y1='50' x2='50' y2='22' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/><line x1='50' y1='50' x2='70' y2='58' stroke='%23c9a962' stroke-width='6' stroke-linecap='round'/></svg>",
+  esri: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%23007AC2' stroke-width='8'/><ellipse cx='50' cy='50' rx='18' ry='42' fill='none' stroke='%23007AC2' stroke-width='6'/><line x1='8' y1='50' x2='92' y2='50' stroke='%23007AC2' stroke-width='6'/></svg>"
+};
+function setHint(t) { document.querySelectorAll('.js-hint').forEach(el => el.textContent = t); }
+function applyDesign(d) {
+  document.documentElement.classList.toggle('design-classic', d === 'classic');
+  document.documentElement.classList.toggle('design-esri', d === 'esri');
+  // media swap is honored dynamically by every engine (style.disabled is not)
+  document.getElementById('css-classic').media = d === 'classic' ? 'all' : 'not all';
+  document.getElementById('css-esri').media = d === 'esri' ? 'all' : 'not all';
+  document.querySelectorAll('.js-btn-classic').forEach(b => b.classList.toggle('active', d === 'classic'));
+  document.querySelectorAll('.js-btn-esri').forEach(b => b.classList.toggle('active', d === 'esri'));
+  document.getElementById('favicon').href = FAVICONS[d];
+  applyTheme(themeOverride || getAutoTheme());
+}
+function setDesign(d) {
+  design = d;
+  store.set('wtd_design', d);
+  applyDesign(d);
+}
 
 // ── Offsets ───────────────────────────────────────────────────────
 function getOffsetMinutes(iana, ref) {
@@ -1015,7 +1496,7 @@ function showConverted(results, sourceZone, hh, mm) {
   document.getElementById('share-box').classList.add('visible');
   document.getElementById('btn-form-clear').style.display = '';
   const inputLabel = use24h ? `${pad(hh)}:${pad(mm)}` : `${pad(hh%12===0?12:hh%12)}:${pad(mm)} ${hh>=12?'PM':'AM'}`;
-  document.getElementById('converter-hint').textContent = `From ${sourceZone.name} at ${inputLabel}`;
+  setHint(`From ${sourceZone.name} at ${inputLabel}`);
 
   allZones().forEach(z => {
     const id = idFor(z.iana);
@@ -1052,7 +1533,7 @@ function hideConverted() {
   document.getElementById('converter-table-card').style.display = 'none';
   document.getElementById('share-box').classList.remove('visible');
   document.getElementById('btn-form-clear').style.display = 'none';
-  document.getElementById('converter-hint').textContent = 'Choose a time & timezone';
+  setHint('Choose a time & timezone');
 }
 function resetInputs() {
   const el = document.getElementById('conv-input');
@@ -1072,11 +1553,12 @@ function copyShare() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────
+applyDesign(design);
 if (themeOverride) applyTheme(themeOverride); else checkAutoTheme();
 setInterval(checkAutoTheme, 60000);
 if (use24h) {
-  document.getElementById('btn-ampm').classList.remove('active');
-  document.getElementById('btn-24h').classList.add('active');
+  document.querySelectorAll('.js-btn-ampm').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.js-btn-24h').forEach(b => b.classList.add('active'));
 }
 buildRows(); updateClocks(); applyFormatToInputs();
 setInterval(updateClocks, 1000);
